@@ -8,3 +8,6 @@ Currently it can just solve for bounded **TIMELIKE** geodesic with input:
 - delta_lambda & N: step size and max steps in Mino time
 
 Originally, `main.py` will produce pictures of motions with respect to Mino time $\lambda$ in different dimensions.
+
+## UPDATE
+add on a package for visualization, including coordinate evolution & 3d trajectory & 3d animation
