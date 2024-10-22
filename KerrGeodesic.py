@@ -71,14 +71,14 @@ class KerrGeodesic:
             raise ValueError("自旋参数 a 的绝对值不能大于 1，否则事件视界不存在。")
         self.r_plus = 1 + np.sqrt(1 - self.a**2)
         self.r_minus = 1 - np.sqrt(1 - self.a**2)
-        print(f"事件视界半径: r_plus={self.r_plus}, r_minus={self.r_minus}")
+        print(f"Horizons: r_plus={self.r_plus}, r_minus={self.r_minus}")
 
     def _compute_constants(self) -> None:
         """计算常数 h_r, h_plus, h_minus。"""
         self.h_r = (self.r1 - self.r2) / (self.r1 - self.r3)
         self.h_plus = self.h_r * (self.r3 - self.r_plus) / (self.r2 - self.r_plus)
         self.h_minus = self.h_r * (self.r3 - self.r_minus) / (self.r2 - self.r_minus)
-        print(f"计算的常数: h_r={self.h_r}, h_plus={self.h_plus}, h_minus={self.h_minus}")
+        print(f"常数: h_r={self.h_r}, h_plus={self.h_plus}, h_minus={self.h_minus}")
 
     def _compute_k_values(self) -> None:
         """根据公式计算椭圆模数 k_r 和 k_z。"""
@@ -86,7 +86,7 @@ class KerrGeodesic:
             ((self.r1 - self.r2) * (self.r3 - self.r4)) / ((self.r1 - self.r3) * (self.r2 - self.r4))
         )
         self.k_z = np.sqrt(self.a**2 * (1 - self.E**2) * (self.z1**2) / (self.z2**2))
-        print(f"计算的椭圆模数: k_r={self.k_r}, k_z={self.k_z}")
+        print(f"椭圆函数: k_r={self.k_r}, k_z={self.k_z}")
 
     def _compute_elliptic_integrals(self) -> None:
         """计算完全椭圆积分。"""
@@ -102,19 +102,21 @@ class KerrGeodesic:
             (1 - self.E**2) * (self.r1 - self.r3) * (self.r2 - self.r4)
         )
         self.Upsilon_z = (np.pi * self.z2) / (2 * self.K_k_z)
-        print(f"计算的角频率: Upsilon_r={self.Upsilon_r}, Upsilon_z={self.Upsilon_z}")
+        # 此处做了对参考文献的修改
+        print(f"角频率: Upsilon_r={self.Upsilon_r}")
+        print(f"角频率: Upsilon_z={self.Upsilon_z}")
 
         # 计算 tilde_Upsilon_t_r 和 tilde_Upsilon_t_z
         self.tilde_Upsilon_t_r = self._compute_tilde_Upsilon_t_r()
         self.tilde_Upsilon_t_z = self._compute_tilde_Upsilon_t_z()
         self.Upsilon_t = self.tilde_Upsilon_t_r + self.tilde_Upsilon_t_z
-        print(f"计算的角频率: Upsilon_t={self.Upsilon_t}")
+        print(f"角频率: Upsilon_t={self.Upsilon_t}")
 
         # 计算 tilde_Upsilon_phi_r 和 tilde_Upsilon_phi_z
         self.tilde_Upsilon_phi_r = self._compute_tilde_Upsilon_phi_r()
         self.tilde_Upsilon_phi_z = self._compute_tilde_Upsilon_phi_z()
         self.Upsilon_phi = self.tilde_Upsilon_phi_r + self.tilde_Upsilon_phi_z
-        print(f"计算的角频率: Upsilon_phi={self.Upsilon_phi}")
+        print(f"角频率: Upsilon_phi={self.Upsilon_phi}")
 
     def _compute_tilde_Upsilon_t_r(self) -> float:
         """计算 tilde_Upsilon_t_r。"""
@@ -146,28 +148,42 @@ class KerrGeodesic:
 
     def _compute_tilde_Upsilon_t_z(self) -> float:
         """计算 tilde_Upsilon_t_z。"""
-        return (
-            -self.a**2 * self.E
-            + (self.E * self.C / ((1 - self.E**2) * self.z1**2))
-            * (1 - (self.E_k_z / self.K_k_z))
-        )
+        if self.z1 == 0:
+            return -self.a**2 * self.E
+        else:
+            return (
+                -self.a**2 * self.E
+                + (self.E * self.C / ((1 - self.E**2) * self.z1**2))
+                * (1 - (self.E_k_z / self.K_k_z))
+            )
 
     def _compute_tilde_Upsilon_phi_r(self) -> float:
         """计算 tilde_Upsilon_phi_r。"""
-        Pi_h_plus_pi = self._compute_incomplete_pi(self.h_plus, np.pi / 2, self.k_r)
-        Pi_h_minus_pi = self._compute_incomplete_pi(self.h_minus, np.pi / 2, self.k_r)
-
-        factor = -2 * self.a * self.E * (self.r2 - self.r3) / (
-            (self.r_plus - self.r_minus)
-            * np.sqrt((1 - self.E**2) * (self.r1 - self.r3) * (self.r2 - self.r4))
-        )
-        term = (
-            ((2 * self.r_plus - self.a * self.L / self.E) / ((self.r2 - self.r_plus) * (self.r3 - self.r_plus)))
-            * Pi_h_plus_pi
-            - ((2 * self.r_minus - self.a * self.L / self.E) / ((self.r2 - self.r_minus) * (self.r3 - self.r_minus)))
-            * Pi_h_minus_pi
-        )
-        return factor * term
+        # 计算不完全椭圆积分 Pi(h_plus | k_r) 和 Pi(h_minus | k_r)
+        Pi_h_plus = self._compute_incomplete_pi(self.h_plus, np.pi/2, self.k_r)
+        Pi_h_minus = self._compute_incomplete_pi(self.h_minus, np.pi/2, self.k_r)
+        
+        # 计算完全椭圆积分 K(k_r)
+        K_kr = ellipk(self.k_r)
+        
+        # 计算 r_plus 对应的项
+        numerator_plus = 2 * self.E * self.r_plus - self.a * self.L
+        denominator_plus = self.r3 - self.r_plus
+        factor_plus = numerator_plus / denominator_plus
+        correction_plus = (self.r2 - self.r3) / (self.r2 - self.r_plus) * (Pi_h_plus / K_kr)
+        term_plus = factor_plus * (1 - correction_plus)
+        
+        # 计算 r_minus 对应的项
+        numerator_minus = 2 * self.E * self.r_minus - self.a * self.L
+        denominator_minus = self.r3 - self.r_minus
+        factor_minus = numerator_minus / denominator_minus
+        correction_minus = (self.r2 - self.r3) / (self.r2 - self.r_minus) * (Pi_h_minus / K_kr)
+        term_minus = factor_minus * (1 - correction_minus)
+        
+        # 计算 tilde_Upsilon_phi_r
+        tilde_Upsilon_phi_r = (self.a / (self.r_plus - self.r_minus)) * (term_plus - term_minus)
+        
+        return tilde_Upsilon_phi_r
 
     def _compute_tilde_Upsilon_phi_z(self) -> float:
         """计算 tilde_Upsilon_phi_z。"""
@@ -239,18 +255,18 @@ class KerrGeodesic:
         self.q_z = self.Upsilon_z * self.lambda_array
         self.q_t = self.Upsilon_t * self.lambda_array
         self.q_phi = self.Upsilon_phi * self.lambda_array
-        print("已设置演化参数。")
+        # print("已设置演化参数。")
 
     def _compute_sn_functions(self) -> None:
         """计算雅可比椭圆函数 sn, cn, dn。"""
         # 计算 u_r 和 u_z
         self.u_r = (self.K_k_r / np.pi) * self.q_r
         self.sn_r, self.cn_r, self.dn_r, self.ph_r = ellipj(self.u_r, self.k_r)
-        print("径向雅可比椭圆函数 sn_r 计算完成。")
+        # print("径向雅可比椭圆函数 sn_r 计算完成。")
 
-        self.u_z = (self.K_k_z / np.pi) * self.q_z
+        self.u_z = (2 * self.K_k_z / np.pi) * self.q_z
         self.sn_z, self.cn_z, self.dn_z, self.ph_z = ellipj(self.u_z, self.k_z)
-        print("z 向雅可比椭圆函数 sn_z 计算完成。")
+        # print("z 向雅可比椭圆函数 sn_z 计算完成。")
 
     def _compute_coordinates(self) -> None:
         """计算 r(lambda) 和 z(lambda)。"""
@@ -274,8 +290,8 @@ class KerrGeodesic:
 
         # 计算 t(lambda) 和 phi(lambda)
         self.t_lambda = self.q_t + t_r + t_z
-        self.phi_lambda = self.q_phi + phi_r + phi_z
-        print("已计算 t(lambda) 和 phi(lambda)。")
+        self.phi_lambda =  self.q_phi + phi_r + phi_z
+        # print("已计算 t(lambda) 和 phi(lambda)。")
 
     def _t_r(self, q_r: np.ndarray) -> np.ndarray:
         """
@@ -382,51 +398,47 @@ class KerrGeodesic:
 
     def _tilde_t_r(self, xi_r: float) -> float:
         """
-        计算 tilde_t_r(xi_r) 的值（标量版本）。
+        Calculate the value of tilde_t_r(xi_r) (scalar version).
 
-        参数:
-            xi_r (float): 参数 xi_r
+        Parameters:
+            xi_r (float): Parameter xi_r
 
-        返回:
-            float: tilde_t_r 的值
+        Returns:
+            float: The value of tilde_t_r
         """
-        # Term 1
-        term1 = (
-            self.E * (self.r2 - self.r3)
-            / np.sqrt((1 - self.E**2) * (self.r1 - self.r3) * (self.r2 - self.r4))
-            * (4 + self.r1 + self.r2 + self.r3 + self.r4)
-            * self._compute_incomplete_pi(self.h_r, xi_r, self.k_r)
+        # Precompute common terms to simplify the expression
+        numerator = self.E * (self.r2 - self.r3)
+        denominator = np.sqrt(
+            (1 - self.E**2) * (self.r1 - self.r3) * (self.r2 - self.r4)
+        )
+        common_factor = numerator / denominator
+
+        term1 = (4 + self.r1 + self.r2 + self.r3 + self.r4) * self._compute_incomplete_pi(self.h_r, xi_r, self.k_r)
+
+        r_diff_plus = self.r2 - self.r_plus
+        r_diff_minus = self.r2 - self.r_minus
+        r3_diff_plus = self.r3 - self.r_plus
+        r3_diff_minus = self.r3 - self.r_minus
+
+        factor_plus = (self.r_plus * (4 - self.a * self.L / self.E) - 2 * self.a**2) / (r_diff_plus * r3_diff_plus)
+        factor_minus = (self.r_minus * (4 - self.a * self.L / self.E) - 2 * self.a**2) / (r_diff_minus * r3_diff_minus)
+
+        term2 = 4 / (self.r_plus - self.r_minus) * (
+            factor_plus * self._compute_incomplete_pi(self.h_plus, xi_r, self.k_r) -
+            factor_minus * self._compute_incomplete_pi(self.h_minus, xi_r, self.k_r)
         )
 
-        # Term 2
-        term2 = -4 / (self.r_plus - self.r_minus) * (
-            (
-                (self.r_plus * (4 - self.a * self.L / self.E) - 2 * self.a**2)
-                / ((self.r2 - self.r_plus) * (self.r3 - self.r_plus))
-            )
-            * self._compute_incomplete_pi(self.h_plus, xi_r, self.k_r)
-            - (
-                (self.r_minus * (4 - self.a * self.L / self.E) - 2 * self.a**2)
-                / ((self.r2 - self.r_minus) * (self.r3 - self.r_minus))
-            )
-            * self._compute_incomplete_pi(self.h_minus, xi_r, self.k_r)
+        ellipe_inc = ellipeinc(xi_r, self.k_r)
+        term3 = self.h_r * np.sin(xi_r) * np.cos(xi_r) * np.sqrt(1 - self.k_r * np.sin(xi_r)**2)
+        term4 = (1 - self.h_r * np.sin(xi_r)**2)
+        term5 = (self.r1 - self.r3) * (self.r2 - self.r4) / (self.r2 - self.r3) * (
+            ellipe_inc - term3 / term4
         )
 
-        # Term 3
-        E_xi_r = ellipeinc(xi_r, self.k_r)
-        term3 = (
-            (self.r1 - self.r3) * (self.r2 - self.r4) / (self.r2 - self.r3)
-            * (
-                E_xi_r
-                - self.h_r
-                * np.sin(xi_r)
-                * np.cos(xi_r)
-                * np.sqrt(1 - self.k_r * np.sin(xi_r)**2)
-                / (1 - self.h_r * np.sin(xi_r)**2)
-            )
-        )
+        result = common_factor * (term1 - term2 + term5)
 
-        return term1 + term2 + term3
+        return result
+
 
     def _tilde_t_z(self, xi_z: float) -> float:
         """
@@ -477,8 +489,7 @@ class KerrGeodesic:
             float: tilde_phi_z 的值
         """
         Pi_z1_pi = self._compute_incomplete_pi(self.z1**2, xi_z, self.k_z)
-        return (self.L / self.K_k_z) * Pi_z1_pi
-
+        return (self.L / self.z2) * Pi_z1_pi
 
 # 示例用法
 if __name__ == "__main__":
@@ -489,10 +500,10 @@ if __name__ == "__main__":
     results = kerr.get_results()
 
     # 输出部分结果（用于演示）
-    print(f"t(λ) 数组的前5个元素: {results['t_lambda'][:5]}")
-    print(f"r(λ) 数组的前5个元素: {results['r_lambda'][:5]}")
-    print(f"z(λ) 数组的前5个元素: {results['z_lambda'][:5]}")
-    print(f"φ(λ) 数组的前5个元素: {results['phi_lambda'][:5]}")
+    print(f"t(λ) 前5个元素: {results['t_lambda'][:5]}")
+    print(f"r(λ) 前5个元素: {results['r_lambda'][:5]}")
+    print(f"z(λ) 前5个元素: {results['z_lambda'][:5]}")
+    print(f"φ(λ) 前5个元素: {results['phi_lambda'][:5]}")
     print(f"角频率 Upsilon_t: {results['Upsilon_t']}")
     print(f"角频率 Upsilon_r: {results['Upsilon_r']}")
     print(f"角频率 Upsilon_z: {results['Upsilon_z']}")

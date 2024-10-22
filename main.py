@@ -7,17 +7,19 @@ from KerrGeodesic import KerrGeodesic
 from GeodesicVisualization import GeodesicVisualization
 
 # 定义初始参数
-a = 0.999
-delta_lambda = 0.005
+a = 0.6
+delta_lambda = 0.003
 max_lambda = 50.0  # 定义最大 lambda
 N = int(max_lambda / delta_lambda)
-z1 = 0.6
-r1_initial = 5.0
-r2_initial = 10.0
+N = 50000
+print(f"N: {N}")
+z1 = 0.7
+r1_initial = 7.0
+r2_initial = 6.0
 M = 1.0  # 黑洞质量，暂时只能为1
 
 # 定义动画速度
-skip_lambda = 0.05  # 每帧跳过的 lambda 值
+skip_lambda = 0.1  # 每帧跳过的 lambda 值
 skip_steps = int(skip_lambda / delta_lambda)
 
 # 定义模式变量，0表示运行所有功能，1表示绘制分量演化，2表示绘制3D轨迹，3表示创建3D动画
@@ -90,8 +92,8 @@ z = r_lambda * z_lambda
 # 根据 mode 选择要运行的功能
 visualizer = GeodesicVisualization()
 if mode == 0 or mode == 1:
-    visualizer.plot_evolution(lambda_array, results)
+    visualizer.plot_evolution(lambda_array, results, 1.0)
 if mode == 0 or mode == 2:
-    visualizer.plot_3d_trajectory(x, y, z, r2_initial)
+    visualizer.plot_3d_trajectory(x, y, z, r1_initial, 1.2)
 if mode == 0 or mode == 3:
-    visualizer.animate_3d_trajectory(x, y, z, skip_steps, r2_initial)
+    visualizer.animate_3d_trajectory(x, y, z, skip_steps, r1_initial, 1.2)

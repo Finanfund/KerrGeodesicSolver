@@ -9,11 +9,6 @@ class BlackHoleOrbitParameter:
     方法说明：
 
     - `__init__` 初始化类，定义基本物理参数。
-    - `delta` 计算黑洞度规函数 δ(r)。
-    - `d` 计算辅助函数 d(r)。
-    - `f` 计算辅助函数 f(r)。
-    - `g` 计算辅助函数 g(r)。
-    - `h` 计算辅助函数 h(r)。
     - `solve` 求解运动常数 (E, L, C)。
     - `compute_additional_parameters` 计算附加物理参数，包括 z2, r3, r4。
     - `_compute_horizon_radii` 计算外视界和内视界半径。
@@ -78,12 +73,9 @@ class BlackHoleOrbitParameter:
         """计算辅助函数 h(r)。"""
         return r * (r - 2) + (self.z1**2 * self.delta(r)) / (1 - self.z1**2)
 
-
     def solve(self):
         """
         求解运动常数 (E, L, C)。
-
-        使用新的公式计算 E, L, C。
 
         Raises:
         -------
@@ -101,9 +93,8 @@ class BlackHoleOrbitParameter:
         numerator_E = (
             kappa * rho
             + 2 * epsilon * sigma
-            - 2 * self.a * np.sqrt(
-                (sigma / self.a**2)
-                * (sigma * epsilon**2 + rho * epsilon * kappa - eta * kappa**2)
+            - 2 * np.sqrt(
+                sigma * (sigma * epsilon**2 + rho * epsilon * kappa - eta * kappa**2)
             )
         )
         denominator_E = rho**2 + 4 * eta * sigma
@@ -158,7 +149,7 @@ class BlackHoleOrbitParameter:
 
         # 重新排序 r1, r2, r3, r4
         r_values = np.sort([self.r1, self.r2, self.r3, self.r4])
-        self.r3, self.r4, self.r1, self.r2 = r_values  # 按升序排序
+        self.r4, self.r3, self.r2, self.r1 = r_values  # 按升序排序
 
     def _compute_horizon_radii(self):
         """
