@@ -3,7 +3,7 @@ import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
 from KerrParameters import KerrParameters_1 as KerrParameters
-from FullKerr.KerrGeoFast import KerrGeodesic_1 as KerrGeodesic
+from KerrGeoFast import KerrGeodesic_1 as KerrGeodesic
 from GeodesicVisualization import GeodesicVisualization
 import time
 
@@ -91,40 +91,6 @@ Z = r_lambda * z_lambda
 theta = - np.pi / 2 + np.arccos(z1)
 phi_ini =  0
 
-# # 旋转矩阵实现
-# def rotation_matrix(theta, phi):
-#     R_z = np.array([
-#         [np.cos(phi), -np.sin(phi), 0],
-#         [np.sin(phi), np.cos(phi), 0],
-#         [0, 0, 1]
-#     ])
-#     R_y = np.array([
-#         [np.cos(-theta), 0, np.sin(-theta)],
-#         [0, 1, 0],
-#         [np.sin(theta), 0, np.cos(-theta)]
-#     ])
-#     return R_y @ R_z
-
-# # 应用旋转矩阵
-# R = rotation_matrix(theta, phi_ini)
-# rotated_coords = np.dot(R, np.array([x, y, Z]))
-# x, y, Z = rotated_coords
-
-# parameters = initialize_parameters(0, z1, r1_initial, r2_initial, M=M)
-# kerr = initialize_kerr(parameters)
-# results = get_results(kerr)
-
-# lambda_array = kerr.lambda_array
-# r2_lambda = results['r_lambda']
-# z2_lambda = results['z_lambda']
-# phi2_lambda = results['phi_lambda']
-# t2 = results['t_lambda']
-# sin_theta = np.sqrt(1 - z2_lambda**2)
-
-# # 将球坐标转换为笛卡尔坐标
-# x2 = r2_lambda * np.cos(phi2_lambda) * sin_theta
-# y2 = r2_lambda * np.sin(phi2_lambda) * sin_theta
-# Z2 = r2_lambda * z2_lambda
 end_time = time.perf_counter()  # 结束计时
 print(f"运行时间: {end_time - start_time:.2f} 秒")
 # 根据 mode 选择要运行的功能
@@ -135,10 +101,3 @@ if mode == 0 or mode == 2:
     visualizer.plot_3d_trajectory(x, y, Z, parameters['r1'], 1.2)
 if mode == 0 or mode == 3:
     visualizer.animate_3d_trajectory(x, y, Z, skip_steps, parameters['r1'], 1.2)
-# if mode == 0 or mode == 4:
-#     visualizer.plot_evolution_cartesian(lambda_array, x, y, Z, t, 1.0)
-# if mode == 0 or mode == 5:
-#     visualizer.plot_trajectory_difference(lambda_array, t, x, y, Z, t2, x2, y2, Z2)
-# if mode == 0 or mode == 6:
-#     # visualizer.plot_geodesic_difference_rtphi(t, r_lambda, z_lambda, phi_lambda, 0*t2, 0*r2_lambda, 0*z2_lambda, 0*phi2_lambda)
-#     visualizer.plot_geodesic_difference_rtphi(t, r_lambda, z_lambda, phi_lambda, t2, r2_lambda, z2_lambda, phi2_lambda)
